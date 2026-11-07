@@ -1,6 +1,6 @@
 import type { Env } from "../../types";
 import { rpc, type RpcContext } from "../router";
-import { ConnectError, invalidArgument, notFound, permissionDenied, toTimestamp, fromTimestamp, unauthenticated } from "../connect";
+import { ConnectError, invalidArgument, notFound, permissionDenied, toTimestamp, fromTimestamp, unauthenticated, parseFieldMask } from "../connect";
 import type { AuthContext } from "../auth";
 import {
   newUid,
@@ -269,7 +269,7 @@ rpc("MemoService", "UpdateMemo", "required", async (req, ctx) => {
   const row = await getMemoOrThrow(ctx.env, uid);
   if (!canManage(auth, row)) throw permissionDenied();
 
-  const paths: string[] = Array.isArray(req.updateMask?.paths) ? req.updateMask.paths : [];
+  const paths: string[] = parseFieldMask(req.updateMask);
   if (paths.length === 0) throw invalidArgument("update_mask is required");
 
   const sets: string[] = [];

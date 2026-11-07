@@ -77,3 +77,22 @@ export const fromTimestamp = (ts: string | null | undefined): number | undefined
   if (Number.isNaN(ms)) return undefined;
   return Math.floor(ms / 1000);
 };
+
+// proto3 JSON 的 google.protobuf.FieldMask:标准客户端(@connectrpc/connect-web 等)
+// 序列化为逗号分隔的 camelCase 字符串(如 "displayName,url"),而非 {paths:[...]} 对象。
+// 这里统一兼容字符串 / {paths} 对象 / 数组三种形式,返回 snake_case paths。
+export const parseFieldMask = (value: unknown): string[] => {
+  let raw: unknown[] = [];
+  if (typeof value === "string") {
+    raw = value.split(",");
+  } else if (Array.isArray(value)) {
+    raw = value;
+  } else if (value != null && typeof value === "object" && Array.isArray((value as { paths?: unknown }).paths)) {
+    raw = (value as { paths: unknown[] }).paths;
+  }
+  return raw
+    .filter((p): p is string => typeof p === "string")
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => p.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`));
+};

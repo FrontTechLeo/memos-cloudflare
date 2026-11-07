@@ -4,7 +4,7 @@
 
 import type { Env } from "../../types";
 import { rpc, type RpcContext } from "../router";
-import { invalidArgument, notFound, permissionDenied, unauthenticated, toTimestamp, ConnectError } from "../connect";
+import { invalidArgument, notFound, permissionDenied, unauthenticated, toTimestamp, parseFieldMask, ConnectError } from "../connect";
 import { generatePatToken, sha256hex, type AuthContext } from "../auth";
 import { hashPassword } from "../password";
 import {
@@ -49,9 +49,8 @@ const mustGetUserByName = async (env: Env, name: string): Promise<UserRow> => {
   return user;
 };
 
-/** updateMask paths 统一为 snake_case */
-const normalizePaths = (req: any): string[] =>
-  ((req?.updateMask?.paths ?? []) as string[]).map((p) => p.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`));
+/** updateMask paths 统一为 snake_case(兼容 proto3 JSON 字符串形式) */
+const normalizePaths = (req: any): string[] => parseFieldMask(req?.updateMask);
 
 const validateUsername = (username: unknown): string => {
   if (typeof username !== "string" || username.length === 0) throw invalidArgument("username is required");

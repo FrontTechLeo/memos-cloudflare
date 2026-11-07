@@ -5,7 +5,7 @@
 
 import type { Env } from "../../types";
 import { rpc } from "../router";
-import { invalidArgument, notFound, permissionDenied } from "../connect";
+import { invalidArgument, notFound, permissionDenied, parseFieldMask } from "../connect";
 import { newUid, parseChildName, parseName } from "../store";
 
 interface ShortcutRow {
@@ -75,7 +75,8 @@ rpc("ShortcutService", "UpdateShortcut", "required", async (request, ctx) => {
   const row = await requireOwnShortcut(ctx.env, shortcut.name, auth);
 
   // updateMask 缺省时 title/filter 都更新(规格书 §2.8)
-  const paths: string[] = request.updateMask?.paths?.length ? request.updateMask.paths : ["title", "filter"];
+  const mask = parseFieldMask(request.updateMask);
+  const paths: string[] = mask.length ? mask : ["title", "filter"];
   let title = row.title;
   let filter = row.filter;
   for (const path of paths) {

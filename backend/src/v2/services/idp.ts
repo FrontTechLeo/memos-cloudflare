@@ -5,7 +5,7 @@
 // GetIdentityProvider 前端未调用,不注册。
 
 import type { Env } from "../../types";
-import { invalidArgument, notFound, permissionDenied } from "../connect";
+import { invalidArgument, notFound, permissionDenied, parseFieldMask } from "../connect";
 import { rpc } from "../router";
 import { newUid, parseName, safeParse } from "../store";
 
@@ -76,9 +76,8 @@ rpc("IdentityProviderService", "UpdateIdentityProvider", "required", async (requ
   const row = await getIdpByName(ctx.env, idp.name);
 
   // updateMask 为 top-level 字段;缺省时全部可更新字段生效
-  const paths: string[] = request.updateMask?.paths?.length
-    ? request.updateMask.paths
-    : ["title", "identifier_filter", "config"];
+  const mask = parseFieldMask(request.updateMask);
+  const paths: string[] = mask.length ? mask : ["title", "identifier_filter", "config"];
 
   let title = row.name;
   let identifierFilter = row.identifier_filter;
